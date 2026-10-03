@@ -1,10 +1,10 @@
-# 🚀 Crypto Market Data Engineering Pipeline
+#  Crypto Market Data Engineering Pipeline
 
 An end-to-end Python data engineering project that ingests live cryptocurrency market data from REST APIs, performs data-quality validation, routes invalid records to a Dead Letter Queue (DLQ), stores validated data in a partitioned data lake, performs SQL analytics using SQLite, and visualizes the results through an interactive Flask dashboard.
 
 ---
 
-## 📌 Project Overview
+##  Project Overview
 
 This project demonstrates a complete data pipeline starting from live API ingestion and ending with analytical dashboards.
 
@@ -21,47 +21,3 @@ The pipeline performs the following steps:
 9. Visualize market data using interactive charts.
 
 ---
-
-## 🏗️ Architecture
-
-```text
-                 ┌─────────────────────┐
-                 │    CoinGecko API    │
-                 │  Live Market Data   │
-                 └──────────┬──────────┘
-                            │
-                            ▼
-                 ┌─────────────────────┐
-                 │   Data Ingestion    │
-                 │       Python       │
-                 └──────────┬──────────┘
-                            │
-                            ▼
-                 ┌─────────────────────┐
-                 │ Data Validation     │
-                 │ Schema / Type Check │
-                 └───────┬─────┬───────┘
-                         │     │
-                  Valid  │     │ Invalid
-                         │     │
-                         ▼     ▼
-              ┌─────────────┐  ┌─────────────┐
-              │ Production  │  │     DLQ     │
-              │ Data Lake   │  │  Quarantine │
-              └──────┬──────┘  └─────────────┘
-                     │
-                     ▼
-              ┌─────────────┐
-              │   SQLite    │
-              │  Analytics  │
-              └──────┬──────┘
-                     │
-                     ▼
-              ┌─────────────┐
-              │ Flask       │
-              │ Dashboard   │
-              └──────┬──────┘
-                     │
-             ┌───────┼────────┐
-             ▼       ▼        ▼
-          Tables   Charts   USD / INR
