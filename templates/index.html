@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Crypto Market Analytics
+    </title>
+
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+   
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
+</head>
+
+
+<body>
+
+<header>
+
+    <div>
+
+        <h1>
+            Crypto Market Analytics
+        </h1>
+
+        <p>
+            Live Data
+        </p>
+
+    </div>
+
+    <div class="currency-toggle">
+
+        <button
+            id="usdButton"
+            class="currency-button active"
+            onclick="setCurrency('USD')"
+        >
+            USD
+        </button>
+
+        <button
+            id="inrButton"
+            class="currency-button"
+            onclick="setCurrency('INR')"
+        >
+            INR
+        </button>
+
+    </div>
+
+</header>
+
+<main>
+
+    <section class="control-section">
+
+        <button
+            class="fetch-button"
+            onclick="fetchLiveData()"
+        >
+
+             Fetch Live Data
+
+        </button>
+
+
+        <p
+            id="status"
+            class="status"
+        >
+            Click the button to fetch live cryptocurrency data.
+        </p>
+
+    </section>
+
+    <section class="summary-grid">
+
+
+        <div class="summary-card">
+
+            <h3>
+                Total Assets
+            </h3>
+
+            <p id="totalAssets">
+                —
+            </p>
+
+        </div>
+
+
+        <div class="summary-card">
+
+            <h3>
+                Average Price
+            </h3>
+
+            <p id="averagePrice">
+                —
+            </p>
+
+        </div>
+
+
+        <div class="summary-card">
+
+            <h3>
+                Highest Price
+            </h3>
+
+            <p id="highestPrice">
+                —
+            </p>
+
+        </div>
+
+
+        <div class="summary-card">
+
+            <h3>
+                DLQ Records
+            </h3>
+
+            <p id="dlqRecords">
+                —
+            </p>
+
+        </div>
+
+
+    </section>
+
+    <section class="charts-grid">
+
+        <div class="panel chart-panel">
+
+            <div class="panel-header">
+
+                <div>
+
+                    <h2>
+                        Top 10 Market Cap
+                    </h2>
+
+                    <p>
+                        Largest cryptocurrencies by market capitalization
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="chart-container">
+
+                <canvas id="marketCapChart"></canvas>
+
+            </div>
+
+        </div>
+
+        <div class="panel chart-panel">
+
+            <div class="panel-header">
+
+                <div>
+
+                    <h2>
+                        Price Distribution
+                    </h2>
+
+                    <p>
+                        Assets grouped by USD price range
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div class="chart-container doughnut-container">
+
+                <canvas id="priceDistributionChart"></canvas>
+
+            </div>
+
+        </div>
+
+
+    </section>
+
+    <section class="panel chart-panel trend-panel">
+
+        <div class="panel-header">
+
+            <div>
+
+                <h2>
+                    Live Fetch Trend
+                </h2>
+
+                <p>
+                    Average cryptocurrency price across your actual
+                    dashboard fetches during this browser session
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="chart-container">
+
+            <canvas id="fetchTrendChart"></canvas>
+
+        </div>
+
+
+    </section>
+
+    <section class="panel">
+
+        <h2>
+            Top 10 by Market Cap
+        </h2>
+
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th>
+                        Rank
+                    </th>
+
+                    <th>
+                        Token
+                    </th>
+
+                    <th>
+                        Market Cap
+                    </th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody id="marketCapTable">
+
+            </tbody>
+
+        </table>
+
+    </section>
+
+    <section class="panel">
+
+        <h2>
+            Top 10 by 24h Trading Volume
+        </h2>
+
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th>
+                        Rank
+                    </th>
+
+                    <th>
+                        Token
+                    </th>
+
+                    <th>
+                        24h Volume
+                    </th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody id="volumeTable">
+
+            </tbody>
+
+        </table>
+
+    </section>
+
+    <section class="panel">
+
+        <h2>
+            Assets Above $100
+        </h2>
+
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th>
+                        Token
+                    </th>
+
+                    <th>
+                        Price
+                    </th>
+
+                </tr>
+
+            </thead>
+
+
+            <tbody id="priceTable">
+
+            </tbody>
+
+        </table>
+
+    </section>
+
+    <section class="panel">
+
+        <h2>
+            Price Distribution Details
+        </h2>
+
+
+        <div id="distributionContainer">
+
+        </div>
+
+    </section>
+
+
+</main>
+
+<script>
+
+let currentCurrency = "USD";
+
+let exchangeRate = 1;
+
+let dashboardData = null;
+
+let fetchHistory = [];
+
+let marketCapChart = null;
+
+let priceDistributionChart = null;
+
+let fetchTrendChart = null;
+
+function setCurrency(currency) {
+
+    currentCurrency = currency;
+
+
+    document
+        .getElementById("usdButton")
+        .classList
+        .toggle(
+            "active",
+            currency === "USD"
+        );
+
+
+    document
+        .getElementById("inrButton")
+        .classList
+        .toggle(
+            "active",
+            currency === "INR"
+        );
+
+
+    if (dashboardData) {
+
+        renderDashboard(
+            dashboardData
+        );
+
+    }
+
+}
+
+function formatCurrency(value) {
+
+    if (value === null || value === undefined) {
+
+        return "—";
+
+    }
+
+
+    let convertedValue = value;
+
+
+    if (currentCurrency === "INR") {
+
+        convertedValue =
+            value * exchangeRate;
+
+    }
+
+
+    if (currentCurrency === "USD") {
+
+        return "$" +
+            convertedValue.toLocaleString(
+                "en-US",
+                {
+                    maximumFractionDigits: 2
+                }
+            );
+
+    }
+
+
+    return "₹" +
+        convertedValue.toLocaleString(
+            "en-IN",
+            {
+                maximumFractionDigits: 2
+            }
+        );
+
+}
+
+function formatLargeNumber(value) {
+
+    let convertedValue = value;
+
+
+    if (currentCurrency === "INR") {
+
+        convertedValue =
+            value * exchangeRate;
+
+    }
+
+
+    const symbol =
+        currentCurrency === "USD"
+            ? "$"
+            : "₹";
+
+
+    if (convertedValue >= 1e12) {
+
+        return symbol +
+            (convertedValue / 1e12)
+                .toFixed(2) +
+            "T";
+
+    }
+
+
+    if (convertedValue >= 1e9) {
+
+        return symbol +
+            (convertedValue / 1e9)
+                .toFixed(2) +
+            "B";
+
+    }
+
+
+    if (convertedValue >= 1e6) {
+
+        return symbol +
+            (convertedValue / 1e6)
+                .toFixed(2) +
+            "M";
+
+    }
+
+
+    if (convertedValue >= 1e3) {
+
+        return symbol +
+            (convertedValue / 1e3)
+                .toFixed(2) +
+            "K";
+
+    }
+
+
+    return symbol +
+        convertedValue.toFixed(2);
+
+}
+
+async function fetchLiveData() {
+
+
+    const status =
+        document.getElementById(
+            "status"
+        );
+
+
+    status.innerText =
+        "Fetching live data...";
+
+
+    try {
+
+
+        const response =
+            await fetch(
+                "/fetch-data"
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (!data.success) {
+
+            throw new Error(
+                data.error
+            );
+
+        }
+
+        dashboardData = data;
+
+
+        exchangeRate =
+            data.usd_inr_rate;
+
+        fetchHistory.push({
+
+            time:
+                new Date()
+                    .toLocaleTimeString(
+                        "en-IN"
+                    ),
+
+            averagePrice:
+                data.analytics.statistics.average_price
+
+        });
+
+        renderDashboard(
+            data
+        );
+
+
+        const now =
+            new Date();
+
+
+        status.innerText =
+            
+            `Last Updated: ` +
+            `${now.toLocaleString("en-IN")}`;
+
+
+    }
+
+    catch (error) {
+
+        status.innerText =
+            "Error: " +
+            error.message;
+
+    }
+
+}
+
+function renderDashboard(data) {
+
+
+    const analytics =
+        data.analytics;
+
+
+    const statistics =
+        analytics.statistics;
+
+    document.getElementById(
+        "totalAssets"
+    ).innerText =
+        statistics.total_assets;
+
+
+    document.getElementById(
+        "averagePrice"
+    ).innerText =
+        formatCurrency(
+            statistics.average_price
+        );
+
+
+    document.getElementById(
+        "highestPrice"
+    ).innerText =
+        formatCurrency(
+            statistics.highest_price
+        );
+
+
+    document.getElementById(
+        "dlqRecords"
+    ).innerText =
+        data.records_in_dlq;
+
+    const marketCapTable =
+        document.getElementById(
+            "marketCapTable"
+        );
+
+
+    marketCapTable.innerHTML = "";
+
+
+    analytics.market_cap.forEach(
+        (item, index) => {
+
+            const row =
+                document.createElement(
+                    "tr"
+                );
+
+
+            row.innerHTML = `
+
+                <td>
+                    ${index + 1}
+                </td>
+
+                <td>
+                    ${item.token_id}
+                </td>
+
+                <td>
+                    ${formatLargeNumber(
+                        item.market_cap
+                    )}
+                </td>
+
+            `;
+
+
+            marketCapTable.appendChild(
+                row
+            );
+
+        }
+    );
+
+    const volumeTable =
+        document.getElementById(
+            "volumeTable"
+        );
+
+
+    volumeTable.innerHTML = "";
+
+
+    analytics.volume.forEach(
+        (item, index) => {
+
+            const row =
+                document.createElement(
+                    "tr"
+                );
+
+
+            row.innerHTML = `
+
+                <td>
+                    ${index + 1}
+                </td>
+
+                <td>
+                    ${item.token_id}
+                </td>
+
+                <td>
+                    ${formatLargeNumber(
+                        item.volume
+                    )}
+                </td>
+
+            `;
+
+
+            volumeTable.appendChild(
+                row
+            );
+
+        }
+    );
+
+    const priceTable =
+        document.getElementById(
+            "priceTable"
+        );
+
+
+    priceTable.innerHTML = "";
+
+
+    analytics.price_filter.forEach(
+        item => {
+
+            const row =
+                document.createElement(
+                    "tr"
+                );
+
+
+            row.innerHTML = `
+
+                <td>
+                    ${item.token_id}
+                </td>
+
+                <td>
+                    ${formatCurrency(
+                        item.price
+                    )}
+                </td>
+
+            `;
+
+
+            priceTable.appendChild(
+                row
+            );
+
+        }
+    );
+
+    const distributionContainer =
+        document.getElementById(
+            "distributionContainer"
+        );
+
+
+    distributionContainer.innerHTML = "";
+
+
+    analytics.distribution.forEach(
+        item => {
+
+            const row =
+                document.createElement(
+                    "div"
+                );
+
+
+            row.className =
+                "distribution-row";
+
+
+            row.innerHTML = `
+
+                <span>
+                    ${item.category}
+                </span>
+
+                <strong>
+                    ${item.count} assets
+                </strong>
+
+            `;
+
+
+            distributionContainer.appendChild(
+                row
+            );
+
+        }
+    );
+
+    renderMarketCapChart(
+        analytics.market_cap
+    );
+
+
+    renderPriceDistributionChart(
+        analytics.distribution
+    );
+
+
+    renderFetchTrendChart();
+
+}
+
+function renderMarketCapChart(data) {
+
+
+    const labels =
+        data.map(
+            item => item.token_id
+        );
+
+
+    const values =
+        data.map(
+            item => {
+
+                if (
+                    currentCurrency === "INR"
+                ) {
+
+                    return item.market_cap *
+                        exchangeRate;
+
+                }
+
+                return item.market_cap;
+
+            }
+        );
+
+
+    const ctx =
+        document
+            .getElementById(
+                "marketCapChart"
+            )
+            .getContext("2d");
+
+
+    if (marketCapChart) {
+
+        marketCapChart.destroy();
+
+    }
+
+
+    marketCapChart =
+        new Chart(
+            ctx,
+            {
+
+                type: "bar",
+
+                data: {
+
+                    labels: labels,
+
+                    datasets: [{
+
+                        label:
+                            currentCurrency === "USD"
+                                ? "Market Cap (USD)"
+                                : "Market Cap (INR)",
+
+                        data: values,
+
+                        borderWidth: 1
+
+                    }]
+
+                },
+
+
+                options: {
+
+                    indexAxis: "y",
+
+                    responsive: true,
+
+                    maintainAspectRatio: false,
+
+                    plugins: {
+
+                        legend: {
+
+                            display: false
+
+                        }
+
+                    },
+
+                    scales: {
+
+                        x: {
+
+                            ticks: {
+
+                                callback:
+                                    function(value) {
+
+                                        if (
+                                            currentCurrency === "INR"
+                                        ) {
+
+                                            return "₹" +
+                                                (value / 1e9)
+                                                    .toFixed(0) +
+                                                "B";
+
+                                        }
+
+                                        return "$" +
+                                            (value / 1e9)
+                                                .toFixed(0) +
+                                            "B";
+
+                                    }
+
+                            }
+
+                        }
+
+                    }
+
+                }
+
+            }
+        );
+
+}
+
+function renderPriceDistributionChart(
+    data
+) {
+
+
+    const labels =
+        data.map(
+            item => item.category
+        );
+
+
+    const values =
+        data.map(
+            item => item.count
+        );
+
+
+    const ctx =
+        document
+            .getElementById(
+                "priceDistributionChart"
+            )
+            .getContext("2d");
+
+
+    if (priceDistributionChart) {
+
+        priceDistributionChart.destroy();
+
+    }
+
+
+    priceDistributionChart =
+        new Chart(
+            ctx,
+            {
+
+                type: "doughnut",
+
+                data: {
+
+                    labels: labels,
+
+                    datasets: [{
+
+                        data: values,
+
+                        borderWidth: 2
+
+                    }]
+
+                },
+
+
+                options: {
+
+                    responsive: true,
+
+                    maintainAspectRatio: false,
+
+                    plugins: {
+
+                        legend: {
+
+                            position: "bottom"
+
+                        }
+
+                    }
+
+                }
+
+            }
+        );
+
+}
+
+function renderFetchTrendChart() {
+
+
+    const labels =
+        fetchHistory.map(
+            item => item.time
+        );
+
+
+    const values =
+        fetchHistory.map(
+            item => {
+
+                if (
+                    currentCurrency === "INR"
+                ) {
+
+                    return item.averagePrice *
+                        exchangeRate;
+
+                }
+
+                return item.averagePrice;
+
+            }
+        );
+
+
+    const ctx =
+        document
+            .getElementById(
+                "fetchTrendChart"
+            )
+            .getContext("2d");
+
+
+    if (fetchTrendChart) {
+
+        fetchTrendChart.destroy();
+
+    }
+
+
+    fetchTrendChart =
+        new Chart(
+            ctx,
+            {
+
+                type: "line",
+
+                data: {
+
+                    labels: labels,
+
+                    datasets: [{
+
+                        label:
+                            currentCurrency === "USD"
+                                ? "Average Price (USD)"
+                                : "Average Price (INR)",
+
+                        data: values,
+
+                        tension: 0.3,
+
+                        fill: false,
+
+                        borderWidth: 2,
+
+                        pointRadius: 4
+
+                    }]
+
+                },
+
+
+                options: {
+
+                    responsive: true,
+
+                    maintainAspectRatio: false,
+
+                    scales: {
+
+                        y: {
+
+                            beginAtZero: false
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+        );
+
+}
+
+
+</script>
+
+
+</body>
+
+</html>

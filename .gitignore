@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.pyc
+
+# Virtual environment
+venv/
+.venv/
+
+# Generated data
+data_lake/production/
+data_lake/dlq/
+
+# SQLite databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Environment variables / secrets
+.env
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
