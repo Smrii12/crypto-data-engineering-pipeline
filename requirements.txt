@@ -1,11 +1,2 @@
-Python
 Flask
-SQLite
-SQL
-REST APIs
-CoinGecko API
-HTML
-CSS
-JavaScript
-Data Lake
-Dead Letter Queue (DLQ)
+gunicorn
